@@ -20,8 +20,8 @@ app = FastAPI()
 BASE_DIR = "/app"  # Base directory inside the container
 
 @app.get("/read")
-async def read_file(filename: str = Query(..., description="File name to read")):
-    file_path = os.path.join(BASE_DIR, filename)
+async def read_file(path: str = Query(..., description="File name to read")):
+    file_path = os.path.join(BASE_DIR, path)
 
     if not os.path.exists(file_path) or os.path.isdir(file_path):
         raise HTTPException(status_code=404, detail="File not found")
