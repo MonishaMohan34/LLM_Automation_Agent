@@ -12,6 +12,13 @@ RUN sh /uv-installer.sh && rm /uv-installer.sh
 # Ensure the installed binary is on the `PATH`
 ENV PATH="/root/.local/bin/:$PATH"
 
-WORKDIR /the/workdir/app
+WORKDIR /app
 
-COPY app.py /app
+COPY app.py .
+
+# Install FastAPI and Uvicorn explicitly (if not using UV inline scripts)
+RUN pip install fastapi uvicorn
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
