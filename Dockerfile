@@ -14,7 +14,7 @@ ENV PATH="/root/.local/bin/:$PATH"
 
 WORKDIR /app
 
-COPY COPY ..
+COPY . .
 
 # Install FastAPI and Uvicorn explicitly (if not using UV inline scripts)
 RUN pip install fastapi uvicorn
