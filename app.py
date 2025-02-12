@@ -16,6 +16,23 @@ from fastapi.responses import PlainTextResponse
 
 app = FastAPI()
 
+
+BASE_DIR = "/app"  # Base directory inside the container
+
+@app.get("/read")
+async def read_file(filename: str = Query(..., description="File name to read")):
+    file_path = os.path.join(BASE_DIR, filename)
+
+    if not os.path.exists(file_path) or os.path.isdir(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    try:
+        with open(file_path, "r") as file:
+            content = file.read()
+        return PlainTextResponse(content=content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading file: {str(e)}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allows all origins
@@ -27,22 +44,6 @@ app.add_middleware(
 @app.get("/")
 def home():
     return {"message": "Hello, FastAPI with uv!"}
-
-@app.get("/read")
-async def read_file(path: str = Query(..., description="File path to read")):
-    try:
-        if not os.path.exists(path) or os.path.isdir(path):
-            raise HTTPException(status_code=404, detail="File not found")
-
-        with open(path, "r") as file:
-            content = file.read()
-
-        return PlainTextResponse(content=content)
-
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error reading file: {str(e)}")
     
 
 @app.get("/run")
