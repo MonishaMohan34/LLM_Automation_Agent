@@ -71,6 +71,8 @@ def run(task: str = Query(..., description="Task to execute")):
 
         # Download script
         script_path = "/app/datagen.py"
+
+        
         response = requests.get(script_url)
         if response.status_code == 200:
             with open(script_path, "wb") as f:
@@ -84,7 +86,8 @@ def run(task: str = Query(..., description="Task to execute")):
             check=True,
             cwd="/app",
             capture_output=True,
-            text=True
+            text=True,
+            env={"DATA_DIR": "/app/data", **os.environ}
         )
 
         
