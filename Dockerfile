@@ -19,7 +19,7 @@ WORKDIR /app
 COPY . .
 
 # Install required Python packages (FastAPI, Uvicorn, Requests)
-RUN pip install fastapi uvicorn requests re 
+RUN pip install fastapi uvicorn requests 
 
 # Expose FastAPI port
 EXPOSE 8000

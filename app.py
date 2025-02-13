@@ -3,6 +3,7 @@
 #   "requests<3",
 #   "fastapi",
 #   "uvicorn",
+#   "re"
 # ]
 # ///
 
