@@ -80,7 +80,7 @@ def run(task: str = Query(..., description="Task to execute")):
             raise HTTPException(status_code=500, detail="Failed to download datagen.py")
 
         # Execute script
-        subprocess.run(["python", script_path, user_email], check=True)
+        subprocess.run(["uv", script_path, user_email], check=True)
 
         return {"status": "success", "message": "Data generation complete."}
 
