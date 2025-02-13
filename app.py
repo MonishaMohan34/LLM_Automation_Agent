@@ -3,6 +3,8 @@
 #   "fastapi",
 #   "uvicorn",
 #   "requests",
+#   "pillow",
+#   "faker",
 # 
 # ]
 # ///
@@ -50,28 +52,25 @@ async def read_file(path: str = Query(..., description="File name to read")):
 
 @app.post("/run")
 def run(task: str = Query(..., description="Task to execute")):
-    """
-    Extracts the script URL and user email from the task description,
-    downloads and executes the script inside the container.
-    """
     try:
-        # Extract script URL
+        # Extract script URL & email dynamically
         script_url_match = re.search(r"https?://[^\s]+", task)
+        email_match = re.search(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", task)
+
         if not script_url_match:
             raise HTTPException(status_code=400, detail="Script URL not found in task.")
-        script_url = script_url_match.group(0)
-
-        # Extract email
-        email_match = re.search(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", task)
         if not email_match:
             raise HTTPException(status_code=400, detail="User email not found in task.")
+
+        script_url = script_url_match.group(0)
         user_email = email_match.group(0)
 
-        # Ensure uv is installed
-        subprocess.run(["uv", "--version"], check=False)
+        # Ensure /app/data exists
+        data_dir = "/app/data"
+        os.makedirs(data_dir, exist_ok=True)
 
         # Download script
-        script_path = os.path.join(BASE_DIR, "datagen.py")
+        script_path = "/app/datagen.py"
         response = requests.get(script_url)
         if response.status_code == 200:
             with open(script_path, "wb") as f:
@@ -79,13 +78,22 @@ def run(task: str = Query(..., description="Task to execute")):
         else:
             raise HTTPException(status_code=500, detail="Failed to download datagen.py")
 
-        # Execute script
-        subprocess.run(["python", script_path, user_email], check=True)
+        # Execute script explicitly in /app
+        result = subprocess.run(
+            ["uv", "run", "python", script_path, user_email],
+            check=True,
+            cwd="/app",
+            capture_output=True,
+            text=True
+        )
 
-        return {"status": "success", "message": "Data generation complete."}
+        
+
+
+        return {"status": "success", "message": "Data generation complete.", "output": result.stdout}
 
     except subprocess.CalledProcessError as e:
-        raise HTTPException(status_code=500, detail=f"Error executing script: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error executing script: {e.stderr}")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")

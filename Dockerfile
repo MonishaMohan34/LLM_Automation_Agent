@@ -1,6 +1,6 @@
 FROM python:3.12-slim-bookworm
 
-# Install required dependencies
+# Install required system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
 
 # Download and install uv
@@ -11,18 +11,21 @@ ENV PATH="/root/.local/bin/:$PATH"
 # Set the working directory
 WORKDIR /app
 
-# Install Python dependencies
-RUN uv install fastapi uvicorn requests
+# Create a virtual environment for uv
+RUN uv venv /app/.venv
+
+# Install Python dependencies inside uv's virtual environment
+# RUN uv pip install fastapi uvicorn requests
+RUN uv pip install fastapi uvicorn requests pillow faker
+
+# Ensure the virtual environment is activated
+ENV UV_VENV="/app/.venv"
 
 # Copy application files
 COPY . .
 
-# Expose the FastAPI port
+# Expose FastAPI port
 EXPOSE 8000
 
-# Run the FastAPI application
-
-# Start FastAPI server
-#CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
-
-CMD ["uv","run","python","app.py"]
+# Start FastAPI using uv
+CMD ["uv", "run", "python", "app.py"]
