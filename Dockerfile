@@ -12,7 +12,7 @@ ENV PATH="/root/.local/bin/:$PATH"
 WORKDIR /app
 
 # Install Python dependencies
-RUN uv pip install fastapi uvicorn requests
+RUN uv install fastapi uvicorn requests
 
 # Copy application files
 COPY . .
