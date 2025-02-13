@@ -12,7 +12,7 @@ ENV PATH="/root/.local/bin/:$PATH"
 WORKDIR /app
 
 # Install Python dependencies
-RUN pip install fastapi uvicorn requests
+RUN uv pip install fastapi uvicorn requests
 
 # Copy application files
 COPY . .
@@ -25,4 +25,4 @@ EXPOSE 8000
 # Start FastAPI server
 #CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
 
-CMD ["uv","run","app.py"]
+CMD ["uv","run","python","app.py"]
