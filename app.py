@@ -81,7 +81,7 @@ def run(task: str = Query(..., description="Task to execute")):
 
         # Execute script
         #subprocess.run(["uv", script_path, user_email], check=True)
-
+        os.chmod(script_path, 0o755)
         result = subprocess.run(
             ["uv", "run", "python", script_path, user_email],
             check=True,
