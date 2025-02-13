@@ -1,19 +1,10 @@
-# /// script
-# dependencies = [
-#   "fastapi",
-#   "uvicorn",
-#   "requests",
-#   "re",
-# ]
-# ///
-
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse
 import os
 import subprocess
 import requests
 import re
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 
 app = FastAPI()
 BASE_DIR = "/app"  # Base directory inside the container
@@ -52,7 +43,7 @@ async def read_file(path: str = Query(..., description="File name to read")):
 def run(task: str = Query(..., description="Task to execute")):
     """
     Extracts the script URL and user email from the task description,
-    downloads and executes the script inside the container.
+    downloads and executes the script inside the container using `uv`.
     """
     try:
         # Extract script URL
@@ -67,8 +58,8 @@ def run(task: str = Query(..., description="Task to execute")):
             raise HTTPException(status_code=400, detail="User email not found in task.")
         user_email = email_match.group(0)
 
-        # Ensure uv is installed
-        subprocess.run(["uv", "--version"], check=False)
+        # Ensure uv is installed (already installed in Docker)
+        subprocess.run(["uv", "--version"], check=True, capture_output=True, text=True)
 
         # Download script
         script_path = os.path.join(BASE_DIR, "datagen.py")
@@ -79,9 +70,10 @@ def run(task: str = Query(..., description="Task to execute")):
         else:
             raise HTTPException(status_code=500, detail="Failed to download datagen.py")
 
-        # Execute script
-        #subprocess.run(["uv", script_path, user_email], check=True)
+        # Make script executable
         os.chmod(script_path, 0o755)
+
+        # Execute script using `uv`
         result = subprocess.run(
             ["uv", "run", "python", script_path, user_email],
             check=True,
@@ -89,10 +81,10 @@ def run(task: str = Query(..., description="Task to execute")):
             text=True
         )
 
-        return {"status": "success", "message": "Data generation complete."}
+        return {"status": "success", "message": "Data generation complete.", "output": result.stdout}
 
     except subprocess.CalledProcessError as e:
-        raise HTTPException(status_code=500, detail=f"Error executing script: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error executing script: {e.stderr}")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
@@ -101,5 +93,3 @@ def run(task: str = Query(..., description="Task to execute")):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
