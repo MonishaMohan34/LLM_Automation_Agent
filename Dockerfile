@@ -17,7 +17,7 @@ WORKDIR /app
 COPY . .
 
 # Install FastAPI and Uvicorn explicitly (if not using UV inline scripts)
-RUN pip install fastapi uvicorn requests
+RUN pip install fastapi uvicorn requests uv
 
 EXPOSE 8000
 
