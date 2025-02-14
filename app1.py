@@ -144,25 +144,34 @@ def task_runner(task: str = Query(..., description="Task description")):
 
     return r
 
+BASE_DIR = "/data"  # Root directory inside the container
+
 @app.get("/read")
-async def read_file(path: str = Query(..., description="File name to read")):
+async def read_file(path: str = Query(..., description="Full absolute path to the file (e.g., /data/format.md)")):
     """
-    Reads a file from the container's `/app` directory and returns its content.
+    Reads a file from the `/data/` directory inside the container and returns its content.
     """
-    file_path = os.path.join(BASE_DIR, path)
+    # Ensure the requested path starts with "/data/"
+    if not path.startswith(BASE_DIR):
+        raise HTTPException(status_code=400, detail="Invalid file path. Only files inside /data/ are allowed.")
+
+    # Normalize path to prevent directory traversal attacks
+    file_path = os.path.normpath(path)
+
+    print(f"Resolved File Path: {file_path}")  # Debugging output
 
     if not os.path.exists(file_path) or os.path.isdir(file_path):
         raise HTTPException(status_code=404, detail="File not found")
 
     try:
-        with open(file_path, "r") as file:
+        with open(file_path, "r", encoding="utf-8") as file:
             content = file.read()
         return PlainTextResponse(content=content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reading file: {str(e)}")
 
 
-    
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
