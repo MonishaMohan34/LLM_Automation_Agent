@@ -144,19 +144,27 @@ def task_runner(task: str = Query(..., description="Task description")):
 
     return r
 
-BASE_DIR = "/data"  # Root directory inside the container
+import os
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import PlainTextResponse
+
+app = FastAPI()
+
+BASE_DIR = "/app/data"  # Actual path inside the container
 
 @app.get("/read")
-async def read_file(path: str = Query(..., description="Full absolute path to the file (e.g., /data/format.md)")):
+async def read_file(path: str = Query(..., description="Path to the file (e.g., /data/format.md)")):
     """
-    Reads a file from the `/data/` directory inside the container and returns its content.
+    Reads a file from the `/app/data/` directory inside the container and returns its content.
     """
-    # Ensure the requested path starts with "/data/"
-    if not path.startswith(BASE_DIR):
-        raise HTTPException(status_code=400, detail="Invalid file path. Only files inside /data/ are allowed.")
 
-    # Normalize path to prevent directory traversal attacks
-    file_path = os.path.normpath(path)
+    # Ensure the requested path starts with "/data/"
+    
+    # Convert "/data/comments.txt" → "comments.txt"
+    relative_path = path[len("/data/"):]
+
+    # Construct the actual file path
+    file_path = os.path.join(BASE_DIR, relative_path)
 
     print(f"Resolved File Path: {file_path}")  # Debugging output
 
