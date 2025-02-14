@@ -144,13 +144,9 @@ def task_runner(task: str = Query(..., description="Task description")):
 
     return r
 
-import os
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import PlainTextResponse
 
-app = FastAPI()
 
-BASE_DIR = "/app/data"  # Actual path inside the container
+  # Actual path inside the container
 
 @app.get("/read")
 async def read_file(path: str = Query(..., description="Path to the file (e.g., /data/format.md)")):
@@ -159,7 +155,7 @@ async def read_file(path: str = Query(..., description="Path to the file (e.g., 
     """
 
     # Ensure the requested path starts with "/data/"
-    
+    BASE_DIR = "/app/data"
     # Convert "/data/comments.txt" → "comments.txt"
     relative_path = path[len("/data/"):]
 
