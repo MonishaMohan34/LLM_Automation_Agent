@@ -20,6 +20,12 @@ import re
 app = FastAPI()
 BASE_DIR = "/app"  # Base directory inside the container
 
+AIPROXY_Token = os.getenv("AIPROXY_TOKEN")
+if not AIPROXY_Token:
+    raise RuntimeError("AIPROXY_TOKEN environment variable is not set. Please set it before running the script.")
+
+AI_PROXY_BASE_URL = "https://aiproxy.sanand.workers.dev/openai/v1"
+
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
