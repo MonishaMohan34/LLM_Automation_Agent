@@ -147,6 +147,33 @@ imagine this is running inside the docker with working dierctory app
 i want it to be in like /app/data 
 this data folder will be created by running the file created through the curl command , 
 
+
+here is example python code 
+import os
+import urllib.request
+
+# Define the URL and output file
+url = "https://raw.githubusercontent.com/sanand0/tools-in-data-science-public/tds-2025-01/project-1/datagen.py"
+output_file = "./data/datagen.py"
+
+# Ensure /data directory exists
+os.makedirs("./data", exist_ok=True)
+
+# Download the Python script
+try:
+    urllib.request.urlretrieve(url, output_file)
+    print(f"Downloaded script to {output_file}")
+except Exception as e:
+    print(f"Error downloading the script: {e}")
+
+# Run the downloaded Python script with uv
+email_argument = "23f3002091@ds.study.iitm.ac.in"
+try:
+    os.system(f"uv run {output_file} {email_argument} --root ./data")
+except Exception as e:
+    print(f"Error running the script: {e}")
+
+
 Example 1: Formatting a file with prettier@3.4.2 (Task A2) → Bash
 Task: "Format /data/format.md using prettier@3.4.2"
 Generated Code (Bash):
@@ -173,11 +200,11 @@ Edit
 import os
 from datetime import datetime
 
-input_file = "/data/dates.txt"  //get the path from the task given via post method
+input_file = "./data/dates.txt"  //get the path from the task given via post method
 output_file = "./data/dates-wednesdays.txt"  //get the path from the task given via post method
 
 # Ensure /data directory exists
-os.makedirs("/data", exist_ok=True)
+os.makedirs("./data", exist_ok=True)
 
 def count_wednesdays(file_path):
     count = 0
@@ -221,11 +248,11 @@ except Exception as e:
 import json
 import os
 
-input_file = "/data/contacts.json" //get the path from the task given via post method
-output_file = "/data/contacts-sorted.json" //get the path from the task given via post method
+input_file = "./data/contacts.json" //get the path from the task given via post method
+output_file = "./data/contacts-sorted.json" //get the path from the task given via post method
 
 # Ensure /data directory exists
-os.makedirs("/data", exist_ok=True)
+os.makedirs("./data", exist_ok=True)
 
 # Function to read contacts
 def read_contacts(file_path):
@@ -265,8 +292,8 @@ so here is another example for logs task
 from pathlib import Path
 
 # Define the input and output paths
-logs_dir = Path('/data/logs/')//get the path from the task given via post method
-output_file = Path('/data/logs-recent.txt')//get the path from the task given via post method
+logs_dir = Path('./data/logs/')//get the path from the task given via post method
+output_file = Path('./data/logs-recent.txt')//get the path from the task given via post method
 
 # Get the list of .log files sorted by modification time, most recent first
 log_files = sorted(logs_dir.glob('*.log'), key=lambda x: x.stat().st_mtime, reverse=True)
@@ -298,8 +325,8 @@ import json
 import os
 
 # Define paths
-docs_dir = Path("/data/docs/") //get the path from the task given via post method
-index_file = Path("/data/docs/index.json/") //get the path from the task given via post method
+docs_dir = Path("./data/docs/") //get the path from the task given via post method
+index_file = Path("./data/docs/index.json/") //get the path from the task given via post method
 
 # Ensure /data/docs/ exists
 docs_dir.mkdir(exist_ok=True, parents=True)
@@ -352,7 +379,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-input_file = "/data/comments.txt"
+input_file = "./data/comments.txt"
 output_file = "./data/comments-similar.txt"
 
 # Load comments from the file
@@ -396,7 +423,7 @@ import sqlite3
 import os
 
 # Path to the SQLite database and the output file
-db_path = "/data/ticket-sales.db"
+db_path = "./data/ticket-sales.db"
 output_file = "./data/ticket-sales-gold.txt"
 
 # Connect to the SQLite database
@@ -509,21 +536,23 @@ def task_runner(task: str = Query(..., description="Task description")):
 @app.get("/read")
 async def read_file(path: str = Query(..., description="Path to the file (e.g., /data/format.md)")):
     """
-    Reads a file from the `/app/data/` directory inside the container and returns its content.
+    Reads a file from either `/app/data/` or `/data/` inside the container and returns its content.
     """
 
-    # Ensure the requested path starts with "/data/"
-    BASE_DIR = "/app/data"
-    # Convert "/data/comments.txt" → "comments.txt"
-    relative_path = path[len("/data/"):]
+    BASE_DIRS = ["/app/data", "/data"]  # Prioritize /app/data, then check /data
+    relative_path = path[len("/data/"):]  # Extract filename
 
-    # Construct the actual file path
-    file_path = os.path.join(BASE_DIR, relative_path)
+    file_path = None
 
-    print(f"Resolved File Path: {file_path}")  # Debugging output
+    # Check in both directories
+    for base_dir in BASE_DIRS:
+        potential_path = os.path.join(base_dir, relative_path)
+        if os.path.exists(potential_path) and not os.path.isdir(potential_path):
+            file_path = potential_path
+            break  # Stop checking once we find the file
 
-    if not os.path.exists(file_path) or os.path.isdir(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
+    if file_path is None:
+        raise HTTPException(status_code=404, detail="File not found in both /app/data and /data")
 
     try:
         with open(file_path, "r", encoding="utf-8") as file:
@@ -531,6 +560,34 @@ async def read_file(path: str = Query(..., description="Path to the file (e.g., 
         return PlainTextResponse(content=content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reading file: {str(e)}")
+
+
+
+# @app.get("/read")
+# async def read_file(path: str = Query(..., description="Path to the file (e.g., /data/format.md)")):
+#     """
+#     Reads a file from the `/app/data/` directory inside the container and returns its content.
+#     """
+
+#     # Ensure the requested path starts with "/data/"
+#     BASE_DIR = "/app/data"
+#     # Convert "/data/comments.txt" → "comments.txt"
+#     relative_path = path[len("/data/"):]
+
+#     # Construct the actual file path
+#     file_path = os.path.join(BASE_DIR, relative_path)
+
+#     print(f"Resolved File Path: {file_path}")  # Debugging output
+
+#     if not os.path.exists(file_path) or os.path.isdir(file_path):
+#         raise HTTPException(status_code=404, detail="File not found")
+
+#     try:
+#         with open(file_path, "r", encoding="utf-8") as file:
+#             content = file.read()
+#         return PlainTextResponse(content=content)
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error reading file: {str(e)}")
 
 
 

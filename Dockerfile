@@ -23,16 +23,15 @@ RUN uv pip install fastapi uvicorn requests pillow faker
 # Ensure the virtual environment is activated
 ENV UV_VENV="/app/.venv"
 
-RUN mkdir -p /app/data
 
 # Copy application files
-COPY . .
+COPY app1.py/ .
 
 # Expose FastAPI port
 EXPOSE 8000
 
 # Start FastAPI using uv
-CMD ["uv", "run", "python", "app1.py"]
+CMD ["uv", "run", "app1.py"]
 
 
 
