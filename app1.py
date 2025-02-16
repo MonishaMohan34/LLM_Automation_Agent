@@ -80,16 +80,16 @@ Deeply analyze the task: Understand the intent, anticipate different input forma
 Generate optimized Python code: Use efficient algorithms and best practices.
 Handle all edge cases: Unexpected formats, missing files, invalid data, etc.
 Code Generation Standards:
-🔹 Task Understanding & Error Prevention:
+ Task Understanding & Error Prevention:
 
 Carefully analyze the task and anticipate all possible edge cases.
 Handle unexpected formats, missing files, and invalid inputs gracefully.
 
-🔹 File Handling Best Practices:
+ File Handling Best Practices:
 
 Use safe, efficient file reading/writing (with open() as file:).
 Ensure output matches the expected result format exactly.
-🔹 Strict Error Handling & Debugging:
+ Strict Error Handling & Debugging:
 
 No syntax errors, runtime failures, or missing dependencies.
 Handle unexpected data variations (e.g., different date formats, empty files).
@@ -174,52 +174,64 @@ except Exception as e:
     print(f"Error running the script: {e}")
 
 
-Example 1: Formatting a file with prettier@3.4.2 (Task A2) → Bash
+Example for task A2:
+Formatting a file with prettier@3.4.2 (Task A2) → Bash
 Task: "Format /data/format.md using prettier@3.4.2"
-Generated Code (Bash):
 
-bash
 Copy
 Edit
-#!/bin/bash
+run this bash command 
+//get file name from the user 
 npx prettier@3.4.2 --write /data/format.md
-Example 2: Counting Wednesdays in a date file (Task A3) → Python
-Task: "Count the number of Wednesdays in /data/dates.txt"
-Generated Code (Python):
 
-python
-Copy
-Edit
-# /// script
-# dependencies = [
-#   "datetime",
-#   
-# ]
-# ///
 
-import os
+Example for task A3 ,this is an example code , just understand the task and create such that the given task is completed correctly
+
 from datetime import datetime
+from dateutil.parser import parse
 
-input_file = "./data/dates.txt"  //get the path from the task given via post method
-output_file = "./data/dates-wednesdays.txt"  //get the path from the task given via post method
+input_file = "./data/dates.txt"
+output_file = "./data/dates-wednesdays.txt"
 
-# Ensure /data directory exists
-os.makedirs("./data", exist_ok=True)
+# List of date formats to check explicitly
+date_formats = [
+    "%Y-%m-%d",
+    "%d-%b-%Y",
+    "%m/%d/%Y",
+    "%d/%m/%Y",
+    "%B %d, %Y",
+    "%Y/%m/%d %H:%M:%S",
+    "%Y-%m-%d %H:%M:%S",
+    "%d-%b-%Y %H:%M:%S",
+    "%b %d, %Y"
+]
 
+# Function to parse a date string
+def parse_date(date_str):
+    date_str = date_str.strip()
+    if not date_str:
+        return None
+    # Try all known formats first
+    for fmt in date_formats:
+        try:
+            return datetime.strptime(date_str, fmt)
+        except ValueError:
+            continue
+    # If no format matched, try the generic parser
+    try:
+        return parse(date_str, fuzzy=True)
+    except ValueError:
+        return None
+
+# Function to count Wednesdays in the provided date file
 def count_wednesdays(file_path):
     count = 0
     try:
         with open(file_path, "r", encoding="utf-8") as file:
             for line in file:
-                date_str = line.strip()
-                if not date_str:
-                    continue
-                try:
-                    date = datetime.strptime(date_str, "%Y-%m-%d")
-                    if date.weekday() == 2:
-                        count += 1
-                except ValueError:
-                    continue
+                date = parse_date(line)
+                if date and date.weekday() == 2:  # 2 = Wednesday
+                    count += 1
         return count
     except FileNotFoundError:
         return 0
@@ -227,22 +239,18 @@ def count_wednesdays(file_path):
 # Get the count of Wednesdays
 result = count_wednesdays(input_file)
 
+# Write the result to the output file
 try:
-    # Open file in write mode and ensure it's correctly written
     with open(output_file, "w", encoding="utf-8") as file:
         file.write(f"{result}\n")
-        file.flush()  # Flush the buffer
-        os.fsync(file.fileno())  # Force the OS to write the file to disk before closing
-    print(f"Output successfully written to {output_file}")
 except Exception as e:
     print(f"Error writing to {output_file}: {e}")
 
 
+This is an example 
 
-    This is an example 
 
-
-    it is another example for the sorted contacts 
+it is another example for the sorted contacts 
 
 
 import json
@@ -289,6 +297,8 @@ write code which are optimal and do not include any other dependencies other tha
 
 so here is another example for logs task 
 
+
+
 from pathlib import Path
 
 # Define the input and output paths
@@ -319,64 +329,138 @@ except Exception as e:
     print(f'Error writing to {output_file}: {e}')
 
 here is another example of Create an index file that maps each filename (without the /data/docs/ prefix) to its title
+copy and edit as per the task requirment
 
 from pathlib import Path
 import json
-import os
 
 # Define paths
-docs_dir = Path("./data/docs/") //get the path from the task given via post method
-index_file = Path("./data/docs/index.json/") //get the path from the task given via post method
+docs_dir = Path("./data/docs")
+index_file = Path("./data/docs/index.json")
 
 # Ensure /data/docs/ exists
-docs_dir.mkdir(exist_ok=True, parents=True)
+if not docs_dir.exists():
+    docs_dir.mkdir(parents=True, exist_ok=True)  # Use `exist_ok=True` to avoid errors if the folder exists
 
 # Dictionary for filename-to-title mapping
 index_mapping = {}
 
 # Find all Markdown files
-markdown_files = list(docs_dir.glob("**/*.md"))
+markdown_files = list(docs_dir.glob('**/*.md'))
 
 if markdown_files:
     for markdown_file in markdown_files:
         try:
-            with markdown_file.open("r", encoding="utf-8") as file:
+            with markdown_file.open('r', encoding='utf-8') as file:
                 title_found = False
                 for line in file:
-                    if line.startswith("# "):  # First H1 found
+                    if line.startswith('# '):  # First H1 found
                         title = line[2:].strip()
-                        index_mapping[str(markdown_file.relative_to(docs_dir))] = title
+                        index_mapping[markdown_file.relative_to(docs_dir).as_posix()] = title
                         title_found = True
                         break
                 if not title_found:
-                    index_mapping[str(markdown_file.relative_to(docs_dir))] = "Untitled"
+                    index_mapping[markdown_file.relative_to(docs_dir).as_posix()] = 'Untitled'
         except Exception as e:
-            print(f"Error processing {markdown_file}: {e}")
+            index_mapping[markdown_file.relative_to(docs_dir).as_posix()] = f'Error: {e}'  # Capture any errors
 
 # Write index to JSON file
 try:
-    with index_file.open("w", encoding="utf-8") as out_file:
+    with index_file.open('w', encoding='utf-8') as out_file:
         json.dump(index_mapping, out_file, ensure_ascii=False, indent=4)
-        out_file.flush()  # Ensure data is written
-        os.fsync(out_file.fileno())  # Force OS write to disk
-    print(f"Index successfully written to {index_file}")
+    print(f'Index successfully written to {index_file}')
 except Exception as e:
-    print(f"Error writing to {index_file}: {e}")
+    print(f'Error writing to {index_file}: {e}')
 
+    
+here is another example of task A7: which is extracting emails of sender , receiver  and CC
+
+according to the task requiremnets copy and edit it to return only what is asked 
+
+import re
+import os
+
+# Define input and output file paths
+input_file = "./data/email.txt"    //get from user
+output_file = "./data/email-sender.txt"  //get from user
+
+# Ensure the output directory exists
+os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+# Function to extract email addresses from different fields
+def extract_emails(content, field):
+    pattern = rf"^{field}:\s+(.+)$"
+    match = re.search(pattern, content, re.MULTILINE)
+    if not match:
+        return []
+    
+    # Extract email addresses from the matched line
+    email_pattern = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+    emails = re.findall(email_pattern, match.group(1))
+    return emails
+
+# Read the email content
+try:
+    with open(input_file, "r", encoding="utf-8") as file:
+        content = file.read()
+except FileNotFoundError:
+    print(f"Error: {input_file} not found.")
+    exit(1)
+
+# Extract different types of email addresses
+sender_email = extract_emails(content, "From")
+receiver_emails = extract_emails(content, "To")
+cc_emails = extract_emails(content, "Cc")
+
+# Debugging Output
+print(f"Sender Email: {sender_email}")
+print(f"Receiver Emails: {receiver_emails}")
+print(f"CC Emails: {cc_emails}")
+
+# Save the extracted emails to a file
+with open(output_file, "w", encoding="utf-8") as file:
+    file.write(f"Sender: {', '.join(sender_email)}\n")
+    file.write(f"To: {', '.join(receiver_emails)}\n")
+    file.write(f"Cc: {', '.join(cc_emails)}\n")
+
+print(f"Email details extracted and saved to {output_file}")
+
+here is an example of the retrieving details from .png
+
+import pytesseract
+from PIL import Image
+import re
+input_image = "./data/credit_card.png"
+output_file = "./data/credit-card.txt"
+
+# Load the image
+try:
+    image = Image.open(input_image)
+except FileNotFoundError:
+    print(f"Error: File '{input_image}' not found.")
+    exit()
+
+# Perform OCR
+extracted_text = pytesseract.image_to_string(image, config='--psm 6')
+
+# Extract only digits (credit card number)
+credit_card_number = "".join(re.findall(r'\d+', extracted_text))
+
+# Save to output file
+if credit_card_number:
+    with open(output_file, "w") as f:
+        f.write(credit_card_number)
+    print(f"Extracted credit card number saved to {output_file}.")
+else:
+    print("No credit card number found.")
 
 
 other example of finding most similar to comments
-
-# /// script
-# dependencies = [
-#   "numpy",
-#   "scikit-learn"
-# ]
-# ///
+again this is just an eample code , copy and modify it according to the task if required 
 
 import os
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 input_file = "./data/comments.txt"
@@ -393,12 +477,14 @@ except FileNotFoundError:
 if len(comments) < 2:
     print("Not enough comments to compare.")
 else:
-    # Convert comments into TF-IDF vectors
-    vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(comments)
+    # Load a pre-trained sentence transformer model
+    model = SentenceTransformer('all-MiniLM-L6-v2')  # Efficient and accurate
 
-    # Compute cosine similarity between comments
-    cosine_similarities = cosine_similarity(tfidf_matrix, tfidf_matrix)
+    # Compute embeddings
+    embeddings = model.encode(comments, normalize_embeddings=True)
+
+    # Compute cosine similarity
+    cosine_similarities = cosine_similarity(embeddings)
 
     # Ignore self-similarity by setting diagonal to -1
     np.fill_diagonal(cosine_similarities, -1)
@@ -415,6 +501,7 @@ else:
         output.write(f"{comment1}\n{comment2}\n")
 
     print(f"Most similar comments saved to {output_file}.")
+
 
 
     here is another example of What is the total sales of all the items in a specific ticket type
@@ -453,6 +540,103 @@ except Exception as e:
 finally:
     if connection:
         connection.close()
+
+for task B5. Run a SQL query on a SQLite or DuckDB database
+
+here is an example code 
+
+def run_sql_query(
+    database_file: str,
+    query: str,
+    output_file: Optional[str],
+    database_type: str,
+    output_format: str = "csv",
+):
+
+    if database_type == "sqlite":
+        conn = sqlite3.connect(database_file)
+    elif database_type == "duckdb":
+        conn = duckdb.connect(database_file)
+    else:
+        raise ValueError("Unsupported database type. Use 'sqlite' or 'duckdb'.")
+
+    try:
+        result = pd.read_sql_query(query, conn)
+    except Exception as e:
+        conn.close()
+        raise ValueError(f"Error executing query: {e}")
+    finally:
+        conn.close()
+
+    # Save output if requested
+    if output_file:
+        if output_format == "csv":
+            result.to_csv(output_file, index=False, header=True)  # CSV includes headers
+        elif output_format == "txt":
+            with open(output_file, "w") as file:
+                for _, row in result.iterrows():
+                    # Write rows without column names
+                    file.write(" ".join(map(str, row.values)) + "\n")
+        else:
+            raise ValueError("Unsupported output format. Use 'csv' or 'txt'.")
+    else:
+        for _, row in result.iterrows():
+            print(" ".join(map(str, row.values)))
+            return {
+                "output_saved_to_location": output_file,
+                "response": "Task Done Successfully.",
+            }
+
+    return [{"response": result}]
+
+for image analysis task use this code: ```
+
+from openai import OpenAI
+import base64
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+        # Function to encode the image
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
+
+        # Path to your image
+image_path = "data/example.png"
+
+        # Getting the base64 string
+base64_image = encode_image(image_path)
+
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_KEY"),
+    base_url=os.environ.get("OPENAI_URL")
+)
+
+chat_completion = client.chat.completions.create(
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Prompt according to task"},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/png;base64,{base64_image}",
+                        },
+                    },
+                ],
+            }
+        ],
+    temperature=0.2,
+    model="gpt-4o-mini",
+)
+
+print(chat_completion.choices[0].message.content)
+        ```
+        
 
 """
 
